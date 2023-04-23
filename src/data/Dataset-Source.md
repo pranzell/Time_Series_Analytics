@@ -5,7 +5,7 @@ Historical sales data from 45 stores
 ## Citation
 
 Manjeet Singh. (2021). Retail Dataset. [CSV File]. Kaggle. Retrieved April 23, 2023, 
-from https://www.kaggle.com/datasets/manjeetsingh/retaildataset?resource=download&select=stores+data-set.csv
+from https://www.kaggle.com/datasets/manjeetsingh/retaildataset
 
 
 ## Dataset Description
