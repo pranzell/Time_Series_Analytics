@@ -20,7 +20,7 @@ Within the Excel Sheet, there are 3 Tabs – Stores, Features and Sales
 ### Stores
 Anonymized information about the 45 stores, indicating the type and size of store
 
-### Features
+### 1. Features (Walmart Retail Data Analytics - Features data-set.csv)
 Contains additional data related to the store, department, and regional activity for the given dates.
 
 - Store - the store number
@@ -32,7 +32,7 @@ Contains additional data related to the store, department, and regional activity
 - Unemployment - the unemployment rate
 - IsHoliday - whether the week is a special holiday week
 
-### Sales
+### 2. Sales (Walmart Retail Data Analytics - sales data-set.csv)
 Historical sales data, which covers to 2010-02-05 to 2012-11-01. Within this tab you will find the following fields:
 
 - Store - the store number
@@ -40,3 +40,10 @@ Historical sales data, which covers to 2010-02-05 to 2012-11-01. Within this tab
 - Date - the week
 - Weekly_Sales -  sales for the given department in the given store
 - IsHoliday - whether the week is a special holiday week
+
+### 3. Store Information (Walmart Retail Data Analytics - stores data-set.csv)
+Contains additional data related to all the 45 stores:
+
+- Store - the store number
+- Type - Category of Store (A,B, or C) based on consumption
+- Size - Physical area of a store in Square feet 
