@@ -5,17 +5,20 @@
 - Using Linear Regression to predict on Time-Series data
 - Time Series Components
 
-- Time Series Decomposition
+
+## Time Series Decomposition
   - Components: Trend, Seasonality, Remainder
   - Techniques to perform decomposition into three components
   - Forecasting using decomposition
 
-- Time Series Regression
+
+## Time Series Regression
   - 
 
-- Exponential Smoothing
+
+## Exponential Smoothing
   - 
-  
-  
-- ARIMA
+
+
+## ARIMA
   - 
