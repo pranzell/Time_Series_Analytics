@@ -30,4 +30,11 @@ source: https://otexts.com/fpp2/intro.html
 
 
 ## 5. ARIMA
-  - 
+  - What is Time Series Analysis (ARIMA Modeling)
+  - Why the data has to be Stationary in the Time Series Context
+  - Tests to validate Stationary
+    1. ADF TEST
+    2. KPSS Test
+  - Arima Modelling
+  - Forecast/Predict
+  - Accuracy
