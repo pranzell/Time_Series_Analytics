@@ -7,7 +7,7 @@ Monash University, Australia
 
 source: https://otexts.com/fpp2/intro.html
 
-
+## Time Series Introduction
 - What is Time Series Analytics
 - A Use case
 - Using Linear Regression to predict on Time-Series data
