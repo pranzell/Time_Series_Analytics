@@ -1,0 +1,17 @@
+"Model","CV","AIC","BIC","AdjR2"
+"Temperature + Fuel_Price + CPI + Unemployment",142929.314065929,3816.88799229355,3834.66506007511,0.103855649656049
+"Temperature + Fuel_Price + CPI + Unemployment + Temperature:Fuel_Price",143884.434511308,3818.86596862324,3839.60588103505,0.0974534634319012
+"Temperature + Fuel_Price + CPI + Unemployment + Temperature:CPI",140846.41107038,3818.81430799387,3839.55422040569,0.097779461340841
+"Temperature + Fuel_Price + CPI + Unemployment + Temperature:Unemployment",139599.671814026,3817.29634690752,3838.03625931934,0.10730598185345
+"Temperature + Fuel_Price + CPI + Unemployment + Fuel_Price:CPI",141844.050266611,3818.86135617354,3839.60126858536,0.0974825745043388
+"Temperature + Fuel_Price + CPI + Unemployment + Fuel_Price:Unemployment",143608.548349685,3818.81984643976,3839.55975885158,0.097744517310046
+"Temperature + Fuel_Price + CPI + Unemployment + CPI:Unemployment",143414.718537739,3817.68317178949,3838.42308420131,0.104887913798939
+"Temperature + Fuel_Price + CPI + Unemployment + Temperature:Fuel_Price:CPI",142103.108331365,3818.86476592849,3839.60467834031,0.0974610542249854
+"Temperature + Fuel_Price + CPI + Unemployment + Temperature:Fuel_Price:Unemployment",137184.648185394,3818.29030939234,3839.03022180416,0.101079441620363
+"Temperature + Fuel_Price + CPI + Unemployment + Temperature:CPI:Unemployment",135580.876334311,3815.43291042773,3836.17282283955,0.11886323436555
+"Temperature + Fuel_Price + CPI + Unemployment + Fuel_Price:CPI:Unemployment",144192.489672817,3818.88377630531,3839.62368871713,0.0973410629944415
+"Temperature + Fuel_Price + CPI + Unemployment + Temperature:Fuel_Price:CPI:Unemployment",143454.358723778,3818.37186777557,3839.11178018738,0.100566606526668
+"Temperature + Fuel_Price + CPI + Unemployment + Temperature:Fuel_Price + Temperature:CPI + Temperature:Unemployment + Fuel_Price:CPI + Fuel_Price:Unemployment + CPI:Unemployment",143243.521066005,3820.76823317389,3856.32236873701,0.114837064865385
+"Temperature + Fuel_Price + CPI + Unemployment + Temperature:Fuel_Price + Temperature:CPI + Temperature:Unemployment + Fuel_Price:CPI + Fuel_Price:Unemployment + CPI:Unemployment + Temperature:Fuel_Price:CPI + Temperature:Fuel_Price:Unemployment + Temperature:CPI:Unemployment + Fuel_Price:CPI:Unemployment",144015.811555939,3822.42999065383,3869.83550473798,0.126751627498414
+"Temperature + Fuel_Price + CPI + Unemployment + Temperature:Fuel_Price + Temperature:CPI + Temperature:Unemployment + Fuel_Price:CPI + Fuel_Price:Unemployment + CPI:Unemployment + Temperature:Fuel_Price:CPI + Temperature:Fuel_Price:Unemployment + Temperature:CPI:Unemployment + Fuel_Price:CPI:Unemployment + Temperature:Fuel_Price:CPI:Unemployment",141843.862190055,3824.07401744318,3874.4423761576,0.122063845281845
+"Temperature + Fuel_Price + CPI + Unemployment + Temperature:Fuel_Price + Temperature:CPI + Temperature:Unemployment + Fuel_Price:CPI + Fuel_Price:Unemployment + CPI:Unemployment + Temperature:Fuel_Price:CPI + Temperature:Fuel_Price:Unemployment + Temperature:CPI:Unemployment + Fuel_Price:CPI:Unemployment + Temperature:Fuel_Price:CPI:Unemployment",142514.238882482,3824.07401744318,3874.4423761576,0.122063845281845
