@@ -26,7 +26,10 @@ source: https://otexts.com/fpp2/intro.html
 
 
 ## 4. Exponential Smoothing
-  - 
+  - Types of Exponential Smoothing
+  - Simple Exponential Smoothing (SES)
+  - Double Exponential Smoothing/ Holt's Method
+  - Tripple Exponential Smoothing/ Holt Winter's Method
 
 
 ## 5. ARIMA
