@@ -22,7 +22,10 @@ source: https://otexts.com/fpp2/intro.html
 
 
 ## 3. Time Series Regression
-  - 
+  - Least Squares Estimation
+  - Evaluating Regression Models - Breusch Godfrey Test 
+  - Selecting Best Predictors
+  - Forecasting with Regression
 
 
 ## 4. Exponential Smoothing
