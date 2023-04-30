@@ -103,6 +103,7 @@ store1_df_markdowns %>%
 ```
 
 ```{r}
+library(lubridate)
 myts <- ts(store1_df$Weekly_Sales, start = c(year(min(store1_df$Date)), month(min(store1_df$Date))), frequency = 90)
 fit.consMR <- tslm(
   myts ~ Temperature + CPI + Fuel_Price + Unemployment,
@@ -114,7 +115,7 @@ summary(fit.consMR)
 autoplot(myts, series="Data") +
   autolayer(fitted(fit.consMR), series="Fitted") +
   xlab("Year") + ylab("") +
-  ggtitle("Percent change in US consumption expenditure") +
+  ggtitle("Weekly Sales") +
   guides(colour=guide_legend(title=" "))
 ```
 
@@ -196,7 +197,7 @@ A plot of the residuals against the fitted values should also show no pattern. I
 ```{r}
 library(lubridate)
 
-myts <- ts(store1_df$Weekly_Sales, start = c(year(min(store1_df$Date)), month(min(store1_df$Date))), frequency = 90)
+myts <- ts(store1_df$Weekly_Sales, start = c(year(min(store1_df$Date)), month(min(store1_df$Date))), frequency = 52)
 
 fit.weeklysales <- tslm(myts ~ trend + season)
 summary(fit.weeklysales)
@@ -215,68 +216,73 @@ as.character(formulae[[3]][2])
 ```
 
 ```{r}
-library(tidyr)
 library(dplyr)
-library(caret)
-library(MASS)
+library(tidyr)
+library(purrr)
+library(broom)
+library(car)
 
+# Create a data frame with all possible combinations of the predictors
+predictors <- c("Temperature", "Fuel_Price", "CPI", "Unemployment")
+predictor_combinations <- expand.grid(rep(list(c(0, 1)), length(predictors)))
+colnames(predictor_combinations) <- predictors
 
-library(caret)
-
-# Load data
-data <- store1_df_numeric
-
-# Create formula for linear models
-formula <- as.formula("Weekly_Sales ~ Temperature + Fuel_Price + CPI + Unemployment")
-
-# Create list of model formulae
-formulae <- list(
-  formula,
-  update(formula, . ~ . + Temperature:Fuel_Price),
-  update(formula, . ~ . + Temperature:CPI),
-  update(formula, . ~ . + Temperature:Unemployment),
-  update(formula, . ~ . + Fuel_Price:CPI),
-  update(formula, . ~ . + Fuel_Price:Unemployment),
-  update(formula, . ~ . + CPI:Unemployment),
-  update(formula, . ~ . + Temperature:Fuel_Price:CPI),
-  update(formula, . ~ . + Temperature:Fuel_Price:Unemployment),
-  update(formula, . ~ . + Temperature:CPI:Unemployment),
-  update(formula, . ~ . + Fuel_Price:CPI:Unemployment),
-  update(formula, . ~ . + Temperature:Fuel_Price:CPI:Unemployment),
-  update(formula, . ~ .^2),
-  update(formula, . ~ .^3),
-  update(formula, . ~ .^4),
-  update(formula, . ~ .^5)
+# Create an empty data frame to store the results
+results <- data.frame(
+  Model = character(),
+  CV = numeric(),
+  AIC = numeric(),
+  BIC = numeric(),
+  AdjR2 = numeric(),
+  stringsAsFactors = FALSE
 )
+predictor_combinations
 
-# Initialize the results data frame
-results <- data.frame(Model = character(length(formulae)),
-                      CV = numeric(length(formulae)),
-                      AIC = numeric(length(formulae)),
-                      BIC = numeric(length(formulae)),
-                      AdjR2 = numeric(length(formulae)))
-
-# Loop through each model and fit it using 10-fold cross-validation
-for (i in 1:length(formulae)) {
-  model <- train(formulae[[i]], data, method = "lm", trControl = trainControl(method = "cv", number = 10), preProc = c("center", "scale"))
-  # Extract the CV, AIC, AICc, BIC, and Adjusted R2 values and add them to the results data frame
-  results[i, "Model"] <- as.character(formulae[[i]][3])
-  results[i, "CV"] <- model$results$RMSE[1]
-  results[i, "AIC"] <- AIC(model$finalModel)
-  results[i, "BIC"] <- BIC(model$finalModel)
-  results[i, "AdjR2"] <- summary(model$finalModel)$adj.r.squared
+# Loop through the rows of the data frame and create the models
+for (i in 1:nrow(predictor_combinations)) {
+  predictors_to_include <- predictors[predictor_combinations[i, ] == 1]
+  
+  if (length(predictors_to_include) == 0) {
+    next
+  }
+  formula_string <- paste("Weekly_Sales ~", paste(predictors_to_include, collapse = " + "))
+  formula <- as.formula(formula_string)
+  model <- lm(formula, data = store1_df)
+  cv <- sqrt(mean(resid(model)^2))
+  aic <- AIC(model)
+  bic <- BIC(model)
+  adjr2 <- summary(model)$adj.r.squared
+  model_results <- data.frame(
+    Model = formula_string,
+    CV = cv,
+    AIC = aic,
+    BIC = bic,
+    AdjR2 = adjr2,
+    stringsAsFactors = FALSE
+  )
+  results <- bind_rows(results, model_results)
 }
 
-# Print the results
-print(results)
+write.csv(results, file = "results.csv", row.names = FALSE)
+
+# Print the results in a table
+results_table <- results %>%
+  pivot_wider(
+    names_from = Model,
+    values_from = c(CV, AIC, BIC, AdjR2)
+  ) %>%
+  select(-contains("Intercept"))
+print(results_table)
+results
 ```
 
-The lower the AIC and BIC values, the better the model fits the data, and the higher the adjusted R-squared value, the better the model fits the data. The results suggest that adding interactions between predictors does not substantially improve the model's performance, and that the best-performing model includes only the four main effects (temperature, fuel price, CPI, and unemployment).
+From the table, we can infer that adding more predictors to the model generally results in a better fit, as evidenced by lower CV values and higher adjusted R-squared values. However, the improvement in model fit becomes less significant as more predictors are added.
 
-```{r}
-write.csv(results, "results.csv", row.names = FALSE)
+Among the individual predictors, Temperature appears to be the most informative, as it has the lowest CV value and the highest adjusted R-squared value among the individual predictor models. This suggests that Temperature is a strong predictor of Weekly Sales on its own.
 
-```
+However, the best overall model includes all four predictors (Temperature, Fuel_Price, CPI, and Unemployment), as it has the lowest CV value and the highest adjusted R-squared value among all models. This suggests that all four predictors are important in explaining variability in Weekly Sales.
+
+It's worth noting that the differences in CV, AIC, AICc, and BIC values between models may not always be large enough to justify the inclusion of additional predictors, especially in cases where the added complexity may not be justified by the increase in model fit. In practice, it is important to consider both statistical significance and practical relevance when selecting predictors for a model.
 
 ## Forecasting with Regression
 
@@ -317,7 +323,7 @@ fcast.down <- forecast(fit.consBest, newdata = newdata)
 
 ```{r}
 fcast_ <- forecast(fit.consBest, store1_df)
-autoplot(fcast) +
+autoplot(fcast_) +
   ggtitle("Forecasts of Weekly Sales") +
   xlab("Year") + ylab("Weekly sales")
 ```
