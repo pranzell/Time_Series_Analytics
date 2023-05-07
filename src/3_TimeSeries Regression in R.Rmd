@@ -1,0 +1,337 @@
+---
+title: "Time_Series_Regression"
+output: html_document
+date: "2023-04-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+df <- read.csv("data/Preprocessed_Dataset.csv")
+```
+
+```{r}
+store1_df <- df[df$Store == 1, ]
+store1_df$Date <- as.Date(store1_df$Date, format = "%m/%d/%y")
+
+```
+
+```{r}
+colnames(store1_df)
+```
+
+## Simple Linear Regression
+
+### 1. First, let's plot a line plot of some individual parameters to get an idea of how each of the variables change over time
+
+```{r}
+plot(store1_df$Date, store1_df$Temperature, type = "l", main = "Time Series Plot", xlab = "Year", ylab = "Temperature", col = "red")
+
+plot(store1_df$Date, store1_df$Fuel_Price, type = "l", main = "Time Series Plot", xlab = "Year", ylab = "Temperature", col = "blue")
+
+plot(store1_df$Date, store1_df$Unemployment, type = "l", main = "Time Series Plot", xlab = "Year", ylab = "unemployment" , col = "green")
+
+plot(store1_df$Date, store1_df$Weekly_Sales, type = "l", main = "Time Series Plot", xlab = "Year", ylab = "Weekly Sales" , col = "black")
+```
+
+### 2. Next, lets have a look at pairwise relationship between "weekly_sales" and other variables
+
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+store1_df %>%
+  as.data.frame() %>%
+  ggplot(aes(x=Weekly_Sales, y=Temperature), title("Relationship between Temperature and Weekly Sales")) +
+    ylab("Weekly Sales") +
+    xlab("Temperature") +
+    geom_point() +
+    geom_smooth(method="lm", se=FALSE) 
+
+store1_df %>%
+  as.data.frame() %>%
+  ggplot(aes(x=Weekly_Sales, y=Fuel_Price), title("Relationship between Fuel and Weekly Sales")) +
+    ylab("Weekly Sales") +
+    xlab("Fuel Prices") +
+    geom_point() +
+    geom_smooth(method="lm", se=FALSE) 
+
+store1_df %>%
+  as.data.frame() %>%
+  ggplot(aes(x=Weekly_Sales, y=Unemployment), title("Relationship between Unemployment and Weekly Sales")) +
+    ylab("Weekly Sales") +
+    xlab("Unemployment") +
+    geom_point() +
+    geom_smooth(method="lm", se=FALSE) 
+
+store1_df %>%
+  as.data.frame() %>%
+  ggplot(aes(x=Weekly_Sales, y=CPI), title("Relationship between Unemployment and Weekly Sales")) +
+    ylab("Weekly Sales") +
+    xlab("CPI") +
+    geom_point() +
+    geom_smooth(method="lm", se=FALSE) 
+```
+
+## Multiple Linear Regression
+
+```{r}
+#install.packages("GGally")
+library("GGally")
+```
+
+```{r}
+store1_df_numeric <- store1_df[c("Temperature", "Fuel_Price", "CPI", "Unemployment","Weekly_Sales")]
+store1_df_categorical <- store1_df[c("IsHoliday", "Type", "Holiday_Flag","Weekly_Sales")]
+store1_df_markdowns <- store1_df[c("MarkDown1", "MarkDown2", "MarkDown3", "MarkDown4", "Weekly_Sales")]
+
+store1_df_numeric %>%
+  as.data.frame() %>%
+  GGally::ggpairs()
+
+store1_df_categorical %>%
+  as.data.frame() %>%
+  GGally::ggpairs()
+
+store1_df_markdowns %>%
+  as.data.frame() %>%
+  GGally::ggpairs()
+```
+
+```{r}
+library(lubridate)
+myts <- ts(store1_df$Weekly_Sales, start = c(year(min(store1_df$Date)), month(min(store1_df$Date))), frequency = 90)
+fit.consMR <- tslm(
+  myts ~ Temperature + CPI + Fuel_Price + Unemployment,
+  data=store1_df)
+summary(fit.consMR)
+```
+
+```{r}
+autoplot(myts, series="Data") +
+  autolayer(fitted(fit.consMR), series="Fitted") +
+  xlab("Year") + ylab("") +
+  ggtitle("Weekly Sales") +
+  guides(colour=guide_legend(title=" "))
+```
+
+```{r}
+library(ggplot2)
+
+my_data_frame <- data.frame(ActualValues = store1_df$Weekly_Sales, FittedValues = fitted(fit.consMR))
+
+ggplot(my_data_frame, aes(x = 1:nrow(my_data_frame))) +
+  geom_line(aes(y = FittedValues, color = "Fitted Values")) +
+  geom_line(aes(y = ActualValues, color = "Actual Values")) +
+  scale_color_manual(values = c("Fitted Values" = "blue", "Actual Values" = "red")) +
+  xlab("Observation") +
+  ylab("Values") +
+  ggtitle("Fitted Values vs Actual Values")
+```
+
+```{r}
+cbind(Data = store1_df[,"Weekly_Sales"],
+      Fitted = fitted(fit.consMR)) %>%
+  as.data.frame() %>%
+  ggplot(aes(x=Data, y=Fitted)) +
+    geom_point() +
+    ylab("Fitted (predicted values)") +
+    xlab("Data (actual values)") +
+    ggtitle("Percent change in US consumption expenditure") +
+    geom_abline(intercept=0, slope=1)
+```
+
+## Evaluating Regression Models
+
+### 1. ACF Plots
+
+Autocorrelation is a statistical concept that refers to the correlation of a variable with itself at different points in time. In time series data, it is common to observe a high degree of autocorrelation, meaning that the value of a variable at a given time point is highly correlated with its value at previous time points. This is often due to factors such as seasonality, trends, or other patterns in the data.
+
+When fitting a regression model to time series data, the presence of autocorrelation in the residuals can lead to inefficient forecasts. This is because the estimated model violates the assumption of no autocorrelation in the errors, which means that there is still some information left over in the residuals that should be accounted for in the model in order to obtain better forecasts.
+
+One way to detect the presence of autocorrelation in the residuals is to look at an ACF plot of the residuals, which can reveal any significant lags in the autocorrelation structure. Another approach is to use the Breusch-Godfrey test, also known as the Lagrange Multiplier test for serial correlation, which is designed to test the joint hypothesis that there is no autocorrelation in the residuals up to a certain specified order. A small p-value in the test indicates significant autocorrelation in the residuals, which means that the estimated model is not accounting for all the relevant information in the data.
+
+It's important to note that although forecasts from a model with autocorrelated errors are still unbiased, they may have larger prediction intervals than necessary, which can lead to suboptimal decision-making. Therefore, it's important to carefully examine the residuals of any time series regression model and take steps to account for any remaining autocorrelation in order to obtain more accurate and efficient forecasts.
+
+```{r}
+#install.packages('forecast')
+library(forecast)
+checkresiduals(fit.consMR)
+
+```
+
+The Breusch-Godfrey test for serial correlation is used to test the hypothesis that there is no autocorrelation in the residuals of a regression model. In this case, the test was performed on residuals with an order of up to 10.
+
+The results of the test show that the test statistic is 34.114 and the degrees of freedom are 10. The p-value of the test is 0.0001767, which is less than the significance level of 0.05. This means that we reject the null hypothesis that there is no autocorrelation in the residuals, and conclude that there is evidence of significant serial correlation up to an order of 10.
+
+Therefore, the regression model in question may not be adequately capturing all the relevant information in the data, and it may be necessary to modify the model to account for the remaining autocorrelation in the residuals in order to obtain more accurate and efficient forecasts.
+
+### 2. Residual Plots against Predictors
+
+```{r}
+df <- as.data.frame(store1_df)
+df[,"Residuals"]  <- as.numeric(residuals(fit.consMR))
+p1 <- ggplot(df, aes(x=Temperature, y=Residuals)) +
+  geom_point()
+p2 <- ggplot(df, aes(x=Unemployment, y=Residuals)) +
+  geom_point()
+p3 <- ggplot(df, aes(x=Fuel_Price, y=Residuals)) +
+  geom_point()
+p4 <- ggplot(df, aes(x=CPI, y=Residuals)) +
+  geom_point()
+gridExtra::grid.arrange(p1, p2, p3, p4, nrow=2)
+```
+
+A plot of the residuals against the fitted values should also show no pattern. If a pattern is observed, there may be "heteroscedasticity" in the errors which means that the variance of the residuals may not be constant. If this problem occurs, a transformation of the forecast variable such as a logarithm or square root may be required
+
+## Analysing Trend and Seasonality
+
+```{r}
+ month(min(store1_df$Date))
+```
+
+```{r}
+library(lubridate)
+
+myts <- ts(store1_df$Weekly_Sales, start = c(year(min(store1_df$Date)), month(min(store1_df$Date))), frequency = 52)
+
+fit.weeklysales <- tslm(myts ~ trend + season)
+summary(fit.weeklysales)
+autoplot(myts)
+  
+```
+
+The output also shows the significance of each coefficient, which is determined by the t-value and the associated p-value. The p-value for the trend variable is less than 0.05, which means that it is statistically significant at a 95% confidence level. The p-values for the seasonal variables are greater than 0.05, which means that they are not statistically significant at a 95% confidence level.
+
+The model fit can be evaluated based on the R-squared value and the F-statistic. The R-squared value of 0.08276 indicates that only a small portion of the variance in the time series is explained by the model. The F-statistic and its associated p-value of 1.74 and 0.1047, respectively, test the overall significance of the model. Since the p-value is greater than 0.05, we fail to reject the null hypothesis that all the coefficients are equal to zero, suggesting that the model may not be a good fit for the data.
+
+## Selecting Predictors
+
+```{r}
+as.character(formulae[[3]][2])
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(broom)
+library(car)
+
+# Create a data frame with all possible combinations of the predictors
+predictors <- c("Temperature", "Fuel_Price", "CPI", "Unemployment")
+predictor_combinations <- expand.grid(rep(list(c(0, 1)), length(predictors)))
+colnames(predictor_combinations) <- predictors
+
+# Create an empty data frame to store the results
+results <- data.frame(
+  Model = character(),
+  CV = numeric(),
+  AIC = numeric(),
+  BIC = numeric(),
+  AdjR2 = numeric(),
+  stringsAsFactors = FALSE
+)
+predictor_combinations
+
+# Loop through the rows of the data frame and create the models
+for (i in 1:nrow(predictor_combinations)) {
+  predictors_to_include <- predictors[predictor_combinations[i, ] == 1]
+  
+  if (length(predictors_to_include) == 0) {
+    next
+  }
+  formula_string <- paste("Weekly_Sales ~", paste(predictors_to_include, collapse = " + "))
+  formula <- as.formula(formula_string)
+  model <- lm(formula, data = store1_df)
+  cv <- sqrt(mean(resid(model)^2))
+  aic <- AIC(model)
+  bic <- BIC(model)
+  adjr2 <- summary(model)$adj.r.squared
+  model_results <- data.frame(
+    Model = formula_string,
+    CV = cv,
+    AIC = aic,
+    BIC = bic,
+    AdjR2 = adjr2,
+    stringsAsFactors = FALSE
+  )
+  results <- bind_rows(results, model_results)
+}
+
+write.csv(results, file = "results.csv", row.names = FALSE)
+
+# Print the results in a table
+results_table <- results %>%
+  pivot_wider(
+    names_from = Model,
+    values_from = c(CV, AIC, BIC, AdjR2)
+  ) %>%
+  select(-contains("Intercept"))
+print(results_table)
+results
+```
+
+From the table, we can infer that adding more predictors to the model generally results in a better fit, as evidenced by lower CV values and higher adjusted R-squared values. However, the improvement in model fit becomes less significant as more predictors are added.
+
+Among the individual predictors, Temperature appears to be the most informative, as it has the lowest CV value and the highest adjusted R-squared value among the individual predictor models. This suggests that Temperature is a strong predictor of Weekly Sales on its own.
+
+However, the best overall model includes all four predictors (Temperature, Fuel_Price, CPI, and Unemployment), as it has the lowest CV value and the highest adjusted R-squared value among all models. This suggests that all four predictors are important in explaining variability in Weekly Sales.
+
+It's worth noting that the differences in CV, AIC, AICc, and BIC values between models may not always be large enough to justify the inclusion of additional predictors, especially in cases where the added complexity may not be justified by the increase in model fit. In practice, it is important to consider both statistical significance and practical relevance when selecting predictors for a model.
+
+## Forecasting with Regression
+
+```{r}
+#install.packages('fpp3')
+#install.packages("ggfortify")
+library(forecast)
+library(ggplot2)
+library(ggfortify)
+
+fit.sales <- tslm(myts ~ trend + season)
+fcast <- forecast(fit.sales)
+autoplot(fcast) +
+  ggtitle("Forecasts of Weekly Sales") +
+  xlab("Year") + ylab("Weekly sales")
+```
+
+```{r}
+library(forecast)
+library(ggplot2)
+library(ggfortify)
+
+fit.consBest <- tslm(
+  myts ~ Temperature + CPI + Unemployment,
+  data = store1_df_numeric)
+h <- 4
+newdata <- data.frame(
+    Temperature = c(1, 1, 1, 1),
+    CPI = c(0.5, 0.5, 0.5, 0.5),
+    Unemployment = c(0, 0, 0, 0))
+fcast.up <- forecast(fit.consBest, newdata = newdata)
+newdata <- data.frame(
+    Temperature = rep(-1, h),
+    CPI = rep(-0.5, h),
+    Unemployment = rep(0, h))
+fcast.down <- forecast(fit.consBest, newdata = newdata)
+```
+
+```{r}
+fcast_ <- forecast(fit.consBest, store1_df)
+autoplot(fcast_) +
+  ggtitle("Forecasts of Weekly Sales") +
+  xlab("Year") + ylab("Weekly sales")
+```
+
+```{r}
+autoplot(fcast.down)
+```
+
+```{r}
+autoplot(fcast.up)
+```
